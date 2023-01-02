@@ -16,3 +16,5 @@ For example, how often players land on a property is vital for determining its v
 - Auctions
 - Negotiate properties with other players
 - Pay/collect from other players (chance cards)
+- True multiplayer
+- Front-end
