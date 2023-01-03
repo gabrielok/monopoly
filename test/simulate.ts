@@ -1,10 +1,10 @@
 import { randomInteger } from "@umatch/utils/math";
 import chalk from "chalk";
 
-import { movePlayer } from "./actions";
-import { Place, BOARD } from "./board";
-import { processCard } from "./game";
-import { Player } from "./player";
+import { movePlayer } from "../src/actions";
+import { Place, BOARD } from "../src/board";
+import { processCard } from "../src/game";
+import { Player } from "../src/player";
 
 const MAX_ITER = 100_000;
 
