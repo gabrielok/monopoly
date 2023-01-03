@@ -3,7 +3,7 @@ import { randomInteger, round } from "@umatch/utils/math";
 import { apply, stringify } from "@umatch/utils/object";
 import chalk from "chalk";
 
-import { movePlayer, processCard } from "../src/actions";
+import { movePlayer, processPlace } from "../src/actions";
 import { Place, BOARD } from "../src/board";
 import { chanceCards, chestCards } from "../src/cards";
 import Game from "../src/game";
@@ -31,11 +31,11 @@ for (let i = 0; i < MAX_ITER; i += 1) {
   movePlayer(player, steps, true);
   lastPos = player.position;
   registerVisit(player);
-  processCard(player, game);
+  processPlace(player, game);
   // the player may move multiple times per turn due to chance cards
   while (lastPos !== player.position) {
     registerVisit(player);
-    processCard(player, game);
+    processPlace(player, game);
     lastPos = player.position;
   }
 }

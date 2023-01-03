@@ -40,7 +40,7 @@ export function movePlayer(
   player.position = remainder;
 }
 
-export function processCard(player: Player, game: Game) {
+export function processPlace(player: Player, game: Game) {
   const place = BOARD[player.position];
   if (place === "Go To Jail") {
     arrestPlayer(player);
