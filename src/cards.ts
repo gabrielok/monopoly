@@ -1,11 +1,19 @@
 import { groupBy } from "@umatch/utils/array";
 
-import { movePlayer, arrestPlayer } from "./actions";
+import { arrestPlayer, movePlayer } from "./actions";
 import { BOARD } from "./board";
-import { Property } from "./interfaces/property";
-import { Site } from "./interfaces/site";
-import { Player } from "./player";
 import { PROPERTIES } from "./properties";
+
+import type Game from "./game";
+import type { Property } from "./interfaces/property";
+import type { Site } from "./interfaces/site";
+import type Player from "./player";
+
+export type Card = {
+  action: (player: Player, game: Game) => void;
+  description: string;
+};
+type CardInitializer = [string, (player: Player, game: Game) => void];
 
 /**
  * Returns a function, which advances the player to the nearest property
@@ -49,7 +57,7 @@ function collectTaxes(houseTax: number, hotelTax: number) {
   };
 }
 
-export const chanceCards = [
+const _chanceCards: CardInitializer[] = [
   ["Advance to Go. Collect 2M.", (player: Player) => movePlayer(player, "Go", true)],
   [
     "Advance to Istambul. If you pass Go, collect 2M.",
@@ -93,12 +101,28 @@ export const chanceCards = [
   ],
   ["Go directly to Jail. Do not pass Go, do not collect 2M.", arrestPlayer],
   ["Pay 150K.", alterBalance(-150)],
-  ["Pay each player 500K.", (player: Player) => {}],
-] as const;
+  [
+    "Pay each player 500K.",
+    (player: Player, game: Game) => {
+      game.players.forEach((other) => {
+        player.balance -= 500;
+        other.balance += 500;
+      });
+    },
+  ],
+];
 
-export const chestCards = [
+const _chestCards: CardInitializer[] = [
   ["Advance to Go. Collect 2M.", (player: Player) => movePlayer(player, "Go", true)],
-  ["Collect 100K from each player.", (player: Player) => {}],
+  [
+    "Collect 100K from each player.",
+    (player: Player, game: Game) => {
+      game.players.forEach((other) => {
+        player.balance += 100;
+        other.balance -= 100;
+      });
+    },
+  ],
   ["Collect 100K.", alterBalance(100)],
   ["Collect 100K.", alterBalance(100)],
   ["Collect 1M.", alterBalance(1000)],
@@ -117,4 +141,10 @@ export const chestCards = [
   ["Go directly to Jail. Do not pass Go, do not collect 2M.", arrestPlayer],
   ["Pay 1M.", alterBalance(-1000)],
   ["Pay 500K.", alterBalance(-500)],
-] as const;
+];
+
+function cardFactory([description, action]: CardInitializer): Card {
+  return { action, description };
+}
+export const chanceCards = _chanceCards.map(cardFactory);
+export const chestCards = _chestCards.map(cardFactory);

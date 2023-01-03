@@ -4,7 +4,7 @@ specifiers:
   '@types/node': ^18.11.18
   '@typescript-eslint/eslint-plugin': ^5.47.1
   '@typescript-eslint/parser': ^5.47.1
-  '@umatch/utils': ^1.17.4
+  '@umatch/utils': ^1.18.0
   chalk: ^4.1.2
   commitizen: ^4.2.6
   cz-conventional-changelog: ^3.3.0
@@ -19,7 +19,7 @@ specifiers:
   typescript: ^4.9.4
 
 dependencies:
-  '@umatch/utils': 1.17.4
+  '@umatch/utils': 1.18.0
   chalk: 4.1.2
   enquirer: 2.3.6
 
@@ -389,8 +389,8 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@umatch/utils/1.17.4:
-    resolution: {integrity: sha512-6unsOLhRpsqrOZyGm+RNTulrWJu+n0kCND6LI3DOCibqCeyUZ0rIh2akPNAKfagB1OuF3BqfSmjB0ZYSGcD10w==}
+  /@umatch/utils/1.18.0:
+    resolution: {integrity: sha512-mIKJ1oDnzgqeYDNY0Yy1/6g9CkBiqdq2Kna/txh/H1YA4TohSH3yoVXPep9E7LI15jKVWJyCNrM0w636e/G3yg==}
     dependencies:
       bluebird: 3.7.2
       luxon: 3.2.0

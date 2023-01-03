@@ -1,19 +1,18 @@
-import { pickRandom } from "@umatch/utils/math";
+import type { Card } from "./cards";
+import type Player from "./player";
 
-import { arrestPlayer } from "./actions";
-import { BOARD } from "./board";
-import { chestCards, chanceCards } from "./cards";
-import { Player } from "./player";
+export default class Game {
+  constructor(
+    public players: Player[],
+    private chanceCards: Card[],
+    private chestCards: Card[],
+  ) {}
 
-export function processCard(player: Player) {
-  const place = BOARD[player.position];
-  if (place === "Go To Jail") {
-    arrestPlayer(player);
-  } else if (place === "Chance") {
-    const [_card, effect] = pickRandom(chanceCards);
-    effect(player);
-  } else if (place === "Chest") {
-    const [_card, effect] = pickRandom(chestCards);
-    effect(player);
+  public applyCard(player: Player, place: "Chance" | "Chest") {
+    const cardStack = place === "Chance" ? this.chanceCards : this.chestCards;
+    const card = cardStack.pop();
+    if (!card) throw new Error("Insufficient cards");
+    cardStack.unshift(card);
+    card.action(player, this);
   }
 }

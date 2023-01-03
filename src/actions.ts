@@ -1,7 +1,9 @@
 import { divmod } from "@umatch/utils/math";
 
 import { Place, BOARD } from "./board";
-import { Player } from "./player";
+
+import type Game from "./game";
+import type Player from "./player";
 
 const COLLECT_FROM_GO = 2_000;
 
@@ -36,4 +38,13 @@ export function movePlayer(
     player.balance += COLLECT_FROM_GO;
   }
   player.position = remainder;
+}
+
+export function processCard(player: Player, game: Game) {
+  const place = BOARD[player.position];
+  if (place === "Go To Jail") {
+    arrestPlayer(player);
+  } else if (place === "Chance" || place === "Chest") {
+    game.applyCard(player, place);
+  }
 }
