@@ -138,3 +138,11 @@ export async function rollDiceAction(player: Player, game: Game): Promise<void> 
     consecutiveDoubles += 1;
   }
 }
+
+/**
+ * Transfers value from the first player to the second player.
+ */
+export function transferMoney(player1: Player, player2: Player, value: number): void {
+  player1.balance -= value;
+  player2.balance += value;
+}
