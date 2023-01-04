@@ -6,8 +6,8 @@ For example, how often players land on a property is vital for determining its v
 
 ## To do
 - ~~Multiple players~~
-- Play again when you roll a double dice
-- Go to jail if you roll 3 doubles in one turn
+- ~~Play again when you roll a double dice~~
+- ~~Go to jail if you roll 3 doubles in one turn~~
 - Collect rent from other players
   - Sites
   - Transports

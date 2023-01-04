@@ -1,10 +1,17 @@
 import { shuffle } from "@umatch/utils/array";
+import { nthElement } from "@umatch/utils/math";
 import chalk from "chalk";
 import { prompt } from "enquirer";
 
+import { rollDiceAction } from "./actions";
 import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
+
+const PLAYER_ACTIONS = {
+  "Roll Dice": rollDiceAction,
+} as const;
+type PlayerAction = keyof typeof PLAYER_ACTIONS;
 
 function getOptions(): {
   alwaysAuction: boolean;
@@ -64,8 +71,16 @@ async function run() {
 
   let round = 1;
   while (bankrupt() < game.players.length - 1) {
-    game.players[round - 1].bankrupt = true;
-    console.log(`Round ${round} - ${game.players[round - 1].name} went bankrupt!`);
+    const player = nthElement(game.players, round - 1);
+    console.log(chalk.black.bgWhite(`Round ${round} - ${player.name}'s turn`));
+
+    const answer = await prompt<{ action: PlayerAction }>({
+      type: "select",
+      name: "action",
+      message: `Choose an action:`,
+      choices: Object.keys(PLAYER_ACTIONS),
+    });
+    await PLAYER_ACTIONS[answer.action](player, game);
     round += 1;
   }
   console.log(chalk.bgGreen.white("END"));
