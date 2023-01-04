@@ -2,21 +2,21 @@ import { divmod, randomInteger } from "@umatch/utils/math";
 import chalk from "chalk";
 import { setTimeout } from "node:timers/promises";
 
-import { Place, BOARD } from "./board";
-
+import type { Place } from "./board";
 import type Game from "./game";
 import type Player from "./player";
 
 /**
  * Moves a player to jail without collecting from Go.
  */
-export function arrestPlayer(player: Player) {
+export function arrestPlayer(player: Player, game: Game) {
   console.log(chalk.white.bgRedBright(`👮🏻 ${player.name} has been arrested`));
-  movePlayer(player, "Jail", false);
+  movePlayer(player, game, "Jail", false);
 }
 
 export function movePlayer(
   player: Player,
+  game: Game,
   stepsOrDestination: number | Place,
   collect = true,
 ) {
@@ -24,16 +24,16 @@ export function movePlayer(
   if (typeof stepsOrDestination === "number") {
     steps = stepsOrDestination;
   } else {
-    const newPosition = BOARD.indexOf(stepsOrDestination);
+    const newPosition = game.board.indexOf(stepsOrDestination);
     // if the destination is before the current position, the player
     // actually goes all the way around the board instead of backwards
     steps =
       newPosition < player.position
-        ? newPosition + BOARD.length - player.position
+        ? newPosition + game.board.length - player.position
         : newPosition - player.position;
   }
 
-  const [quotient, remainder] = divmod(player.position + steps, BOARD.length);
+  const [quotient, remainder] = divmod(player.position + steps, game.board.length);
   // quotient > 0 means the player walked over the starting point (Go)
   if (quotient > 0 && collect) {
     player.balance += Number(process.env.COLLECT_FROM_GO);
@@ -47,9 +47,9 @@ function printSameLine(message?: any, cursorTo = 0) {
 }
 
 export function processPlace(player: Player, game: Game) {
-  const place = BOARD[player.position];
+  const place = game.board[player.position];
   if (place === "Go To Jail") {
-    arrestPlayer(player);
+    arrestPlayer(player, game);
   } else if (place === "Chance" || place === "Chest") {
     game.applyCard(player, place);
   }
@@ -83,7 +83,7 @@ async function rollDiceAndMove(player: Player, game: Game): Promise<boolean> {
 
   const totalRoll = firstRoll + secondRoll;
   console.log(`${player.name} rolled ${firstRoll} + ${secondRoll} = ${totalRoll}`);
-  movePlayer(player, totalRoll);
+  movePlayer(player, game, totalRoll);
 
   // Some cards move the player. If they moved, then we should process the new place.
   const lastPos = player.position;
@@ -99,7 +99,7 @@ export async function rollDiceAction(player: Player, game: Game): Promise<void> 
   while (true) {
     if (consecutiveDoubles === 3) {
       console.log(chalk.red(`Oh oh! ${player.name} moved too many times.`));
-      arrestPlayer(player);
+      arrestPlayer(player, game);
     }
 
     const rolledDouble = await rollDiceAndMove(player, game);

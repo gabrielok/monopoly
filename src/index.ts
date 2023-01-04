@@ -4,9 +4,11 @@ import chalk from "chalk";
 import { prompt } from "enquirer";
 
 import { rollDiceAction } from "./actions";
+import { BOARD } from "./board";
 import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
+import { PROPERTIES } from "./properties";
 
 const PLAYER_ACTIONS = {
   "Roll Dice": rollDiceAction,
@@ -44,7 +46,7 @@ export async function initGame(): Promise<Game> {
     players.push(new Player(answer.name));
   }
 
-  return new Game(players, shuffle(chanceCards), shuffle(chestCards));
+  return new Game(players, BOARD, PROPERTIES, shuffle(chanceCards), shuffle(chestCards));
 }
 
 async function run() {

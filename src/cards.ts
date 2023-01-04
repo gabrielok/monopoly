@@ -1,8 +1,6 @@
 import { groupBy } from "@umatch/utils/array";
 
 import { arrestPlayer, movePlayer } from "./actions";
-import { BOARD } from "./board";
-import { PROPERTIES } from "./properties";
 
 import type Game from "./game";
 import type { Property } from "./interfaces/property";
@@ -20,14 +18,14 @@ type CardInitializer = [string, (player: Player, game: Game) => void];
  * of the given type.
  */
 function advanceToNearest(type: Property["type"]) {
-  return (player: Player) => {
-    const places = groupBy(PROPERTIES, "type")[type];
+  return (player: Player, game: Game) => {
+    const places = game.getPropertiesOfType(type);
     const steps = places.reduce<number>((prev, transport) => {
-      const newPosition = BOARD.indexOf(transport.name);
+      const newPosition = game.board.indexOf(transport.name);
       const dist = newPosition - player.position;
       return Math.abs(dist) < Math.abs(prev) ? dist : prev;
-    }, BOARD.length);
-    movePlayer(player, steps, false);
+    }, game.board.length);
+    movePlayer(player, game, steps, false);
   };
 }
 
@@ -45,8 +43,8 @@ function alterBalance(value: number) {
  * and hotels it has on all its sites.
  */
 function collectTaxes(houseTax: number, hotelTax: number) {
-  return (player: Player) => {
-    const playerProperties = groupBy(PROPERTIES, "owner")[player.name];
+  return (player: Player, game: Game) => {
+    const playerProperties = game.getPlayerProperties(player);
     if (!playerProperties) return;
 
     const sites = groupBy(playerProperties, "type")["site"];
@@ -58,19 +56,25 @@ function collectTaxes(houseTax: number, hotelTax: number) {
 }
 
 const _chanceCards: CardInitializer[] = [
-  ["Advance to Go. Collect 2M.", (player: Player) => movePlayer(player, "Go", true)],
+  [
+    "Advance to Go. Collect 2M.",
+    (player: Player, game: Game) => movePlayer(player, game, "Go", true),
+  ],
   [
     "Advance to Istambul. If you pass Go, collect 2M.",
-    (player: Player) => movePlayer(player, "Istambul"),
+    (player: Player, game: Game) => movePlayer(player, game, "Istambul"),
   ],
   [
     "Advance to London. If you pass Go, collect 2M.",
-    (player: Player) => movePlayer(player, "London", true),
+    (player: Player, game: Game) => movePlayer(player, game, "London", true),
   ],
-  ["Advance to Montreal.", (player: Player) => movePlayer(player, "Montreal", false)],
+  [
+    "Advance to Montreal.",
+    (player: Player, game: Game) => movePlayer(player, game, "Montreal", false),
+  ],
   [
     "Advance to the Monopoly Rail Transport. If you pass Go, collect 2M.",
-    (player: Player) => movePlayer(player, "Monopoly Rail", true),
+    (player: Player, game: Game) => movePlayer(player, game, "Monopoly Rail", true),
   ],
   [
     "Advance to the nearest Transport. If unowned, you may buy it from the Bank. If owned, pay owner twice the rental to which they are otherwise entitled. If you pass Go, collect 2M.",
@@ -84,8 +88,8 @@ const _chanceCards: CardInitializer[] = [
     "Advance to the nearest Utility. If unowned, you may buy it from the Bank. If owned, throw dice and pay owner a total 10,000 times the amount thrown. If you pass Go, collect 2M.",
     advanceToNearest("utility"),
   ],
-  ["Collect 1.5M.", alterBalance(1500)],
   ["Collect 500K.", alterBalance(500)],
+  ["Collect 1.5M.", alterBalance(1500)],
   ["For each house pay 250K, for each hotel pay 1M.", collectTaxes(250, 1000)],
   [
     "Get out of Jail free.",
@@ -113,7 +117,10 @@ const _chanceCards: CardInitializer[] = [
 ];
 
 const _chestCards: CardInitializer[] = [
-  ["Advance to Go. Collect 2M.", (player: Player) => movePlayer(player, "Go", true)],
+  [
+    "Advance to Go. Collect 2M.",
+    (player: Player, game: Game) => movePlayer(player, game, "Go", true),
+  ],
   [
     "Collect 100K from each player.",
     (player: Player, game: Game) => {
@@ -125,12 +132,12 @@ const _chestCards: CardInitializer[] = [
   ],
   ["Collect 100K.", alterBalance(100)],
   ["Collect 100K.", alterBalance(100)],
-  ["Collect 1M.", alterBalance(1000)],
-  ["Collect 1M.", alterBalance(1000)],
   ["Collect 200K.", alterBalance(200)],
   ["Collect 250K.", alterBalance(250)],
-  ["Collect 2M.", alterBalance(2000)],
   ["Collect 500K.", alterBalance(500)],
+  ["Collect 1M.", alterBalance(1000)],
+  ["Collect 1M.", alterBalance(1000)],
+  ["Collect 2M.", alterBalance(2000)],
   ["For each house pay 400K, for each hotel pay 1.15M.", collectTaxes(400, 1150)],
   [
     "Get out of Jail free.",
@@ -139,8 +146,8 @@ const _chestCards: CardInitializer[] = [
     },
   ],
   ["Go directly to Jail. Do not pass Go, do not collect 2M.", arrestPlayer],
-  ["Pay 1M.", alterBalance(-1000)],
   ["Pay 500K.", alterBalance(-500)],
+  ["Pay 1M.", alterBalance(-1000)],
 ];
 
 function cardFactory([description, action]: CardInitializer): Card {
