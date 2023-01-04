@@ -1,5 +1,6 @@
 import { shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
+import { pick } from "@umatch/utils/object";
 import chalk from "chalk";
 import { prompt } from "enquirer";
 
@@ -12,8 +13,12 @@ import { PROPERTIES } from "./properties";
 
 const PLAYER_ACTIONS = {
   "Roll Dice": rollDiceAction,
+  "End Turn": () => {},
 } as const;
 type PlayerAction = keyof typeof PLAYER_ACTIONS;
+
+const playerActionsStartTurn = pick(PLAYER_ACTIONS, ["Roll Dice"]);
+const playerActionsEndTurn = pick(PLAYER_ACTIONS, ["End Turn"]);
 
 function getOptions(): {
   alwaysAuction: boolean;
@@ -76,13 +81,22 @@ async function run() {
     const player = nthElement(game.players, round - 1);
     console.log(chalk.black.bgWhite(`Round ${round} - ${player.name}'s turn`));
 
-    const answer = await prompt<{ action: PlayerAction }>({
+    const answerStart = await prompt<{ action: PlayerAction }>({
       type: "select",
       name: "action",
       message: `Choose an action:`,
-      choices: Object.keys(PLAYER_ACTIONS),
+      choices: Object.keys(playerActionsStartTurn),
     });
-    await PLAYER_ACTIONS[answer.action](player, game);
+    await PLAYER_ACTIONS[answerStart.action](player, game);
+
+    const answerEnd = await prompt<{ action: PlayerAction }>({
+      type: "select",
+      name: "action",
+      message: `Choose an action:`,
+      choices: Object.keys(playerActionsEndTurn),
+    });
+    await PLAYER_ACTIONS[answerEnd.action](player, game);
+
     round += 1;
   }
   console.log(chalk.bgGreen.white("END"));
