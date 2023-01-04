@@ -14,6 +14,13 @@ export function arrestPlayer(player: Player, game: Game) {
   movePlayer(player, game, "Jail", false);
 }
 
+/**
+ * Moves the player a number of steps or to a specific place.
+ *
+ * If the player passes Go, rewards them with a fixed amount, except when
+ * collect is false. If the place is before the current position, loops around
+ * the board to possibly collect from Go.
+ */
 export function movePlayer(
   player: Player,
   game: Game,
@@ -41,11 +48,23 @@ export function movePlayer(
   player.position = remainder;
 }
 
+/**
+ * Prints a message over existing text.
+ *
+ * Moves the cursor to a given position, or to the start of the line if not
+ * specified.
+ */
 function printSameLine(message?: any, cursorTo = 0) {
   process.stdout.cursorTo(cursorTo);
   process.stdout.write(String(message));
 }
 
+/**
+ * Processes the place where the player arrived.
+ *
+ * If the place is a property, the player must
+ * pay rent to the owner or may buy it if it is unowned.
+ */
 export function processPlace(player: Player, game: Game) {
   const place = game.board[player.position];
   if (place === "Go To Jail") {
@@ -55,6 +74,9 @@ export function processPlace(player: Player, game: Game) {
   }
 }
 
+/**
+ * Animates a single dice roll.
+ */
 async function rollSingleDice(message = ""): Promise<number> {
   let roll = randomInteger(1, 6);
   process.stdout.write(message);
@@ -77,6 +99,9 @@ async function rollSingleDice(message = ""): Promise<number> {
   return roll;
 }
 
+/**
+ * Rolls the dice, moves the player and processes the place where they arrive.
+ */
 async function rollDiceAndMove(player: Player, game: Game): Promise<boolean> {
   const firstRoll = await rollSingleDice("First roll: ");
   const secondRoll = await rollSingleDice("Second roll: ");
@@ -94,6 +119,12 @@ async function rollDiceAndMove(player: Player, game: Game): Promise<boolean> {
   return firstRoll === secondRoll;
 }
 
+/**
+ * Implements the double roll mechanic.
+ *
+ * If the player rolls a double, they can roll again, up to 3 times, when they
+ * are arrested.
+ */
 export async function rollDiceAction(player: Player, game: Game): Promise<void> {
   let consecutiveDoubles = 0;
   while (true) {
