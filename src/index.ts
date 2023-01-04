@@ -6,13 +6,20 @@ import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
 
-function getOptions(): { maxPlayers: number; alwaysAuction: boolean } {
-  return { maxPlayers: 4, alwaysAuction: false };
+function getOptions(): {
+  alwaysAuction: boolean;
+  collectFromGo: number;
+  maxPlayers: number;
+} {
+  return { alwaysAuction: false, collectFromGo: 2000, maxPlayers: 4 };
 }
 
 export async function initGame(): Promise<Game> {
   const options = getOptions();
-  const { maxPlayers } = options;
+  const { alwaysAuction, collectFromGo, maxPlayers } = options;
+  process.env.ALWAYS_AUCTION = String(alwaysAuction);
+  process.env.COLLECT_FROM_GO = String(collectFromGo);
+
   const players: Player[] = [];
   for (let i = 0; i < maxPlayers; i += 1) {
     const answer = await prompt<{ name: string }>({

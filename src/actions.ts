@@ -5,8 +5,6 @@ import { Place, BOARD } from "./board";
 import type Game from "./game";
 import type Player from "./player";
 
-const COLLECT_FROM_GO = 2_000;
-
 /**
  * Moves a player to jail without collecting from Go.
  */
@@ -35,7 +33,7 @@ export function movePlayer(
   const [quotient, remainder] = divmod(player.position + steps, BOARD.length);
   // quotient > 0 means the player walked over the starting point (Go)
   if (quotient > 0 && collect) {
-    player.balance += COLLECT_FROM_GO;
+    player.balance += Number(process.env.COLLECT_FROM_GO);
   }
   player.position = remainder;
 }
