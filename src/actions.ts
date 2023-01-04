@@ -1,4 +1,5 @@
 import { divmod } from "@umatch/utils/math";
+import chalk from "chalk";
 
 import { Place, BOARD } from "./board";
 
@@ -9,6 +10,7 @@ import type Player from "./player";
  * Moves a player to jail without collecting from Go.
  */
 export function arrestPlayer(player: Player) {
+  console.log(chalk.white.bgRedBright(`👮🏻 ${player.name} has been arrested`));
   movePlayer(player, "Jail", false);
 }
 
