@@ -1,24 +1,49 @@
 import { shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
-import { pick } from "@umatch/utils/object";
 import chalk from "chalk";
 import { prompt } from "enquirer";
 
-import { rollDiceAction } from "./actions";
+import { managePropertiesAction, rollDiceAction } from "./actions";
 import { BOARD } from "./board";
 import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
 import { PROPERTIES } from "./properties";
 
+// for some reason, enquirer doesn't export this interface
+type Choice = {
+  disabled?: boolean | string;
+  hint?: string;
+  message?: string;
+  name: string;
+  value?: string;
+};
+
 const PLAYER_ACTIONS = {
   "Roll Dice": rollDiceAction,
+  "Manage Properties": managePropertiesAction,
   "End Turn": () => {},
 } as const;
 type PlayerAction = keyof typeof PLAYER_ACTIONS;
 
-const playerActionsStartTurn = pick(PLAYER_ACTIONS, ["Roll Dice"]);
-const playerActionsEndTurn = pick(PLAYER_ACTIONS, ["End Turn"]);
+const playerActionFilters = {
+  startTurn: (action: PlayerAction) => {
+    return action !== "End Turn";
+  },
+  endTurn: (action: PlayerAction) => {
+    return action !== "Roll Dice";
+  },
+} as const;
+
+function playerActionsFormat(
+  player: Player,
+  game: Game,
+): (action: PlayerAction) => Choice {
+  return (action: PlayerAction) => ({
+    disabled: action === "Manage Properties" && !game.getPlayerProperties(player),
+    name: action,
+  });
+}
 
 function getOptions(): {
   alwaysAuction: boolean;
@@ -84,16 +109,20 @@ async function run() {
     const answerStart = await prompt<{ action: PlayerAction }>({
       type: "select",
       name: "action",
-      message: `Choose an action:`,
-      choices: Object.keys(playerActionsStartTurn),
+      message: "Choose an action:",
+      choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
+        .filter(playerActionFilters["startTurn"])
+        .map(playerActionsFormat(player, game)),
     });
     await PLAYER_ACTIONS[answerStart.action](player, game);
 
     const answerEnd = await prompt<{ action: PlayerAction }>({
       type: "select",
       name: "action",
-      message: `Choose an action:`,
-      choices: Object.keys(playerActionsEndTurn),
+      message: "Choose an action:",
+      choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
+        .filter(playerActionFilters["endTurn"])
+        .map(playerActionsFormat(player, game)),
     });
     await PLAYER_ACTIONS[answerEnd.action](player, game);
 

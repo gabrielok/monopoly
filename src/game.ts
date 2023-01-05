@@ -22,11 +22,11 @@ export default class Game {
     card.action(player, this);
   }
 
-  public getPlayerProperties(player: Player): Property[] {
+  public getPlayerProperties(player: Player): Property[] | undefined {
     return groupBy(this.properties, "owner")[player.name];
   }
 
-  public getPropertiesOfType(type: Property["type"]) {
+  public getPropertiesOfType(type: Property["type"]): Property[] {
     return groupBy(this.properties, "type")[type];
   }
 }

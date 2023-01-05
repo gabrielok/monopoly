@@ -1,5 +1,6 @@
 import { divmod, randomInteger } from "@umatch/utils/math";
 import chalk from "chalk";
+import { prompt } from "enquirer";
 import { setTimeout } from "node:timers/promises";
 
 import type { Place } from "./board";
@@ -12,6 +13,23 @@ import type Player from "./player";
 export function arrestPlayer(player: Player, game: Game) {
   console.log(chalk.white.bgRedBright(`👮🏻 ${player.name} has been arrested`));
   movePlayer(player, game, "Jail", false);
+}
+
+export async function managePropertiesAction(player: Player, game: Game) {
+  const playerProperties = game.getPlayerProperties(player);
+  if (!playerProperties) {
+    // the player may only access this action if they have properties
+    throw new Error("Player has no properties");
+  }
+
+  const answer = await prompt<{ name: string }>({
+    type: "select",
+    name: "name",
+    message: `Choose a property:`,
+    choices: playerProperties.map((p) => p.name),
+  });
+  const property = playerProperties.find((p) => p.name === answer.name);
+  console.log(property);
 }
 
 /**
