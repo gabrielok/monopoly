@@ -1,4 +1,4 @@
-import { shuffle } from "@umatch/utils/array";
+import { remove, shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
 import chalk from "chalk";
 import { prompt } from "enquirer";
@@ -32,6 +32,9 @@ const playerActionFilters = {
   },
   endTurn: (action: PlayerAction) => {
     return action !== "Roll Dice";
+  },
+  betweenTurns: (action: PlayerAction) => {
+    return action !== "Roll Dice" && action !== "Manage Properties";
   },
 } as const;
 
@@ -125,6 +128,34 @@ async function run() {
         .map(playerActionsFormat(player, game)),
     });
     await PLAYER_ACTIONS[answerEnd.action](player, game);
+
+    const nextPlayer = nthElement(game.players, round);
+    const playersWhoCanPlayBetween = game.players.filter(
+      (p) => p.name !== player.name && p.name !== nextPlayer.name,
+    );
+    while (playersWhoCanPlayBetween.length > 0) {
+      const answerBetweenPlayer = await prompt<{ name: string }>({
+        type: "select",
+        name: "name",
+        message: `Does anyone want to play between rounds? (next up: ${nextPlayer.name})`,
+        choices: ["No", ...playersWhoCanPlayBetween.map((p) => p.name)],
+      });
+      const playBetweenPlayer = game.players.find(
+        (p) => p.name === answerBetweenPlayer.name,
+      );
+      if (!playBetweenPlayer) break;
+      remove(playersWhoCanPlayBetween, playBetweenPlayer);
+
+      const answerBetweenAction = await prompt<{ action: PlayerAction }>({
+        type: "select",
+        name: "action",
+        message: "Choose an action:",
+        choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
+          .filter(playerActionFilters["betweenTurns"])
+          .map(playerActionsFormat(playBetweenPlayer, game)),
+      });
+      await PLAYER_ACTIONS[answerBetweenAction.action](playBetweenPlayer, game);
+    }
 
     round += 1;
   }
