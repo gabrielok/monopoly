@@ -39,6 +39,21 @@ const playerActionFilters = {
   },
 } as const;
 
+function greet() {
+  console.log(
+    chalk.whiteBright
+      .bgRed(`                                                                         
+  ███╗   ███╗ █████╗ ███╗  ██╗ █████╗ ██████╗  █████╗ ██╗     ██╗   ██╗  
+  ████╗ ████║██╔══██╗████╗ ██║██╔══██╗██╔══██╗██╔══██╗██║     ╚██╗ ██╔╝  
+  ██╔████╔██║██║  ██║██╔██╗██║██║  ██║██████╔╝██║  ██║██║      ╚████╔╝   
+  ██║╚██╔╝██║██║  ██║██║╚████║██║  ██║██╔═══╝ ██║  ██║██║       ╚██╔╝    
+  ██║ ╚═╝ ██║╚█████╔╝██║ ╚███║╚█████╔╝██║     ╚█████╔╝███████╗   ██║     
+  ╚═╝     ╚═╝ ╚════╝ ╚═╝  ╚══╝ ╚════╝ ╚═╝      ╚════╝ ╚══════╝   ╚═╝     
+                                                                         `),
+    "\n",
+  );
+}
+
 function playerActionsFormat(
   player: Player,
   game: Game,
@@ -49,6 +64,27 @@ function playerActionsFormat(
   });
 }
 
+async function performActionsBetweenTurns(player: Player, game: Game, round: number) {
+  const nextPlayer = nthElement(game.players, round + 1);
+  const wantToPlay = await promptBoolean(
+    `Does anyone want to take actions between turns? (next up: ${nextPlayer.name})`,
+    true,
+  );
+  if (wantToPlay) {
+    // the current player and the one who's about to play don't need to take
+    // actions between turns
+    for (let i = 2; i < game.players.length; i += 1) {
+      const playerBetween = nthElement(game.players, round + i);
+      const wantsToPlay = await promptBoolean(
+        `Does ${playerBetween.name} want to take actions between turns?`,
+        true,
+      );
+      if (!wantsToPlay) continue;
+
+      await promptAndPerformAction(playerBetween, game, "between", playerActionsFormat);
+    }
+  }
+}
 async function promptAndPerformAction(
   player: Player,
   game: Game,
@@ -122,18 +158,7 @@ export async function initGame(): Promise<Game> {
 }
 
 async function run() {
-  console.log(
-    chalk.whiteBright
-      .bgRed(`                                                                         
-  ███╗   ███╗ █████╗ ███╗  ██╗ █████╗ ██████╗  █████╗ ██╗     ██╗   ██╗  
-  ████╗ ████║██╔══██╗████╗ ██║██╔══██╗██╔══██╗██╔══██╗██║     ╚██╗ ██╔╝  
-  ██╔████╔██║██║  ██║██╔██╗██║██║  ██║██████╔╝██║  ██║██║      ╚████╔╝   
-  ██║╚██╔╝██║██║  ██║██║╚████║██║  ██║██╔═══╝ ██║  ██║██║       ╚██╔╝    
-  ██║ ╚═╝ ██║╚█████╔╝██║ ╚███║╚█████╔╝██║     ╚█████╔╝███████╗   ██║     
-  ╚═╝     ╚═╝ ╚════╝ ╚═╝  ╚══╝ ╚════╝ ╚═╝      ╚════╝ ╚══════╝   ╚═╝     
-                                                                         `),
-    "\n",
-  );
+  greet();
 
   const game = await initGame();
   function bankrupt() {
@@ -149,28 +174,8 @@ async function run() {
     console.log(chalk.black.bgWhite(`Round ${round + 1} - ${player.name}'s turn`));
 
     await promptAndPerformAction(player, game, "startTurn", playerActionsFormat);
-
     await promptAndPerformAction(player, game, "endTurn", playerActionsFormat);
-
-    const nextPlayer = nthElement(game.players, round + 1);
-    const wantToPlay = await promptBoolean(
-      `Does anyone want to take actions between turns? (next up: ${nextPlayer.name})`,
-      true,
-    );
-    if (wantToPlay) {
-      // the current player and the one who's about to play don't need to take
-      // actions between turns
-      for (let i = 2; i < game.players.length; i += 1) {
-        const playerBetween = nthElement(game.players, round + i);
-        const wantsToPlay = await promptBoolean(
-          `Does ${playerBetween.name} want to take actions between turns?`,
-          true,
-        );
-        if (!wantsToPlay) continue;
-
-        await promptAndPerformAction(playerBetween, game, "between", playerActionsFormat);
-      }
-    }
+    await performActionsBetweenTurns(player, game, round);
 
     round += 1;
   }
