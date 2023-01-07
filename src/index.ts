@@ -187,7 +187,7 @@ async function run() {
     await run();
   } catch (error) {
     console.debug(error);
-    console.log(chalk.whiteBright.bgRed("Goodbye!"));
-    process.exit();
   }
+  console.log(chalk.whiteBright.bgRed("Goodbye!"));
+  process.exit();
 })();
