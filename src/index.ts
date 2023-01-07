@@ -34,7 +34,7 @@ const playerActionFilters = {
   endTurn: (action: PlayerAction) => {
     return action !== "Roll Dice";
   },
-  betweenTurns: (action: PlayerAction) => {
+  between: (action: PlayerAction) => {
     return action !== "Roll Dice" && action !== "Manage Properties";
   },
 } as const;
@@ -47,6 +47,55 @@ function playerActionsFormat(
     disabled: action === "Manage Properties" && !game.getPlayerProperties(player),
     name: action,
   });
+}
+
+async function promptAndPerformAction(
+  player: Player,
+  game: Game,
+  filterKey: keyof typeof playerActionFilters,
+  mapper: (player: Player, game: Game) => (action: PlayerAction) => Choice,
+) {
+  const answer = await prompt<{ action: PlayerAction }>({
+    type: "select",
+    name: "action",
+    message: "Choose an action:",
+    choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
+      .filter(playerActionFilters[filterKey])
+      .map(mapper(player, game)),
+  });
+  await PLAYER_ACTIONS[answer.action](player, game);
+}
+
+async function promptBoolean(message: string, inverted: boolean): Promise<boolean> {
+  const choices = ["Yes", "No"];
+  if (inverted) choices.reverse();
+
+  const answer = await prompt<{ choice: string }>({
+    type: "select",
+    name: "choice",
+    message,
+    choices,
+  });
+  return parseBool(answer.choice);
+}
+
+async function promptPlayerName(
+  players: Player[],
+  numberOfPlayers: number,
+): Promise<string> {
+  const answer = await prompt<{ name: string }>({
+    type: "input",
+    name: "name",
+    message: `What is your name? (${players.length + 1}/${numberOfPlayers})`,
+    validate(value: string): boolean | string {
+      if (!value) return "You need to type something";
+      if (value.length < 3) return "Please type a longer name";
+      if (players.map((p) => p.name.toLowerCase()).includes(value.toLowerCase()))
+        return "Name already taken";
+      return true;
+    },
+  });
+  return answer.name;
 }
 
 function getOptions(): {
@@ -65,19 +114,8 @@ export async function initGame(): Promise<Game> {
 
   const players: Player[] = [];
   for (let i = 0; i < maxPlayers; i += 1) {
-    const answer = await prompt<{ name: string }>({
-      type: "input",
-      name: "name",
-      message: `What is your name? (${i + 1}/${maxPlayers})`,
-      validate(value: string): boolean | string {
-        if (!value) return "You need to type something";
-        if (value.length < 3) return "Please type a longer name";
-        if (players.map((p) => p.name.toLowerCase()).includes(value.toLowerCase()))
-          return "Name already taken";
-        return true;
-      },
-    });
-    players.push(new Player(answer.name));
+    const name = await promptPlayerName(players, maxPlayers);
+    players.push(new Player(name));
   }
 
   return new Game(players, BOARD, PROPERTIES, shuffle(chanceCards), shuffle(chestCards));
@@ -105,61 +143,32 @@ async function run() {
     );
   }
 
-  let round = 1;
+  let round = 0;
   while (bankrupt() < game.players.length - 1) {
-    const player = nthElement(game.players, round - 1);
-    console.log(chalk.black.bgWhite(`Round ${round} - ${player.name}'s turn`));
+    const player = nthElement(game.players, round);
+    console.log(chalk.black.bgWhite(`Round ${round + 1} - ${player.name}'s turn`));
 
-    const answerStart = await prompt<{ action: PlayerAction }>({
-      type: "select",
-      name: "action",
-      message: "Choose an action:",
-      choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
-        .filter(playerActionFilters["startTurn"])
-        .map(playerActionsFormat(player, game)),
-    });
-    await PLAYER_ACTIONS[answerStart.action](player, game);
+    await promptAndPerformAction(player, game, "startTurn", playerActionsFormat);
 
-    const answerEnd = await prompt<{ action: PlayerAction }>({
-      type: "select",
-      name: "action",
-      message: "Choose an action:",
-      choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
-        .filter(playerActionFilters["endTurn"])
-        .map(playerActionsFormat(player, game)),
-    });
-    await PLAYER_ACTIONS[answerEnd.action](player, game);
+    await promptAndPerformAction(player, game, "endTurn", playerActionsFormat);
 
-    // the current player and the one who's about to play don't need to take
-    // actions between turns
-    const playersWhoCanPlayBetween = game.players.slice(2);
-    const wantToPlay = await prompt<{ choice: string }>({
-      type: "select",
-      name: "choice",
-      message: `Does anyone want to take actions between turns? (next up: ${
-        nthElement(game.players, round).name
-      })`,
-      choices: ["No", "Yes"],
-    });
-    if (parseBool(wantToPlay.choice)) {
-      for (const playerBetween of playersWhoCanPlayBetween) {
-        const wantsToPlay = await prompt<{ choice: string }>({
-          type: "select",
-          name: "choice",
-          message: `Does ${playerBetween.name} want to take actions between turns?`,
-          choices: ["No", "Yes"],
-        });
-        if (!parseBool(wantsToPlay.choice)) continue;
+    const nextPlayer = nthElement(game.players, round + 1);
+    const wantToPlay = await promptBoolean(
+      `Does anyone want to take actions between turns? (next up: ${nextPlayer.name})`,
+      true,
+    );
+    if (wantToPlay) {
+      // the current player and the one who's about to play don't need to take
+      // actions between turns
+      for (let i = 2; i < game.players.length; i += 1) {
+        const playerBetween = nthElement(game.players, round + i);
+        const wantsToPlay = await promptBoolean(
+          `Does ${playerBetween.name} want to take actions between turns?`,
+          true,
+        );
+        if (!wantsToPlay) continue;
 
-        const actionBetween = await prompt<{ action: PlayerAction }>({
-          type: "select",
-          name: "action",
-          message: "Choose an action:",
-          choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
-            .filter(playerActionFilters["betweenTurns"])
-            .map(playerActionsFormat(playerBetween, game)),
-        });
-        await PLAYER_ACTIONS[actionBetween.action](playerBetween, game);
+        await promptAndPerformAction(playerBetween, game, "between", playerActionsFormat);
       }
     }
 
