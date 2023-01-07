@@ -137,16 +137,26 @@ async function promptPlayerName(
 function getOptions(): {
   alwaysAuction: boolean;
   collectFromGo: number;
+  incomeTax: number;
   maxPlayers: number;
+  superTax: number;
 } {
-  return { alwaysAuction: false, collectFromGo: 2000, maxPlayers: 4 };
+  return {
+    alwaysAuction: false,
+    collectFromGo: 2000,
+    incomeTax: 2000,
+    maxPlayers: 4,
+    superTax: 1000,
+  };
 }
 
 export async function initGame(): Promise<Game> {
   const options = getOptions();
-  const { alwaysAuction, collectFromGo, maxPlayers } = options;
+  const { alwaysAuction, collectFromGo, incomeTax, maxPlayers, superTax } = options;
   process.env.ALWAYS_AUCTION = String(alwaysAuction);
   process.env.COLLECT_FROM_GO = String(collectFromGo);
+  process.env.INCOME_TAX = String(incomeTax);
+  process.env.SUPER_TAX = String(superTax);
 
   const players: Player[] = [];
   for (let i = 0; i < maxPlayers; i += 1) {

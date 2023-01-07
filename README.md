@@ -18,3 +18,7 @@ For example, how often players land on a property is vital for determining its v
 - Pay/collect from other players (chance cards)
 - True multiplayer
 - Front-end
+- Limit the number of available houses
+- Finish implementations
+  - getOptions()
+  - manageProperties()

@@ -89,6 +89,10 @@ export function processPlace(player: Player, game: Game) {
     arrestPlayer(player, game);
   } else if (place === "Chance" || place === "Chest") {
     game.applyCard(player, place);
+  } else if (place === "Income Tax") {
+    player.balance -= Number(process.env.INCOME_TAX);
+  } else if (place === "Super Tax") {
+    player.balance -= Number(process.env.SUPER_TAX);
   }
 }
 
