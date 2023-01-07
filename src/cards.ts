@@ -58,7 +58,7 @@ function alterBalance(value: number) {
 
 /**
  * Returns a function, which, for each player in the game, transfers money
- * between the calling player and the other player.
+ * from the calling player to the other player.
  */
 function transferMoneyToEachPlayer(value: number) {
   return (player1: Player, game: Game) => {

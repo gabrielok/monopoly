@@ -1,5 +1,6 @@
-import { remove, shuffle } from "@umatch/utils/array";
+import { shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
+import { parseBool } from "@umatch/utils/string";
 import chalk from "chalk";
 import { prompt } from "enquirer";
 
@@ -129,32 +130,37 @@ async function run() {
     });
     await PLAYER_ACTIONS[answerEnd.action](player, game);
 
-    const nextPlayer = nthElement(game.players, round);
-    const playersWhoCanPlayBetween = game.players.filter(
-      (p) => p.name !== player.name && p.name !== nextPlayer.name,
-    );
-    while (playersWhoCanPlayBetween.length > 0) {
-      const answerBetweenPlayer = await prompt<{ name: string }>({
-        type: "select",
-        name: "name",
-        message: `Does anyone want to play between rounds? (next up: ${nextPlayer.name})`,
-        choices: ["No", ...playersWhoCanPlayBetween.map((p) => p.name)],
-      });
-      const playBetweenPlayer = game.players.find(
-        (p) => p.name === answerBetweenPlayer.name,
-      );
-      if (!playBetweenPlayer) break;
-      remove(playersWhoCanPlayBetween, playBetweenPlayer);
+    // the current player and the one who's about to play don't need to take
+    // actions between turns
+    const playersWhoCanPlayBetween = game.players.slice(2);
+    const wantToPlay = await prompt<{ choice: string }>({
+      type: "select",
+      name: "choice",
+      message: `Does anyone want to take actions between turns? (next up: ${
+        nthElement(game.players, round).name
+      })`,
+      choices: ["No", "Yes"],
+    });
+    if (parseBool(wantToPlay.choice)) {
+      for (const playerBetween of playersWhoCanPlayBetween) {
+        const wantsToPlay = await prompt<{ choice: string }>({
+          type: "select",
+          name: "choice",
+          message: `Does ${playerBetween.name} want to take actions between turns?`,
+          choices: ["No", "Yes"],
+        });
+        if (!parseBool(wantsToPlay.choice)) continue;
 
-      const answerBetweenAction = await prompt<{ action: PlayerAction }>({
-        type: "select",
-        name: "action",
-        message: "Choose an action:",
-        choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
-          .filter(playerActionFilters["betweenTurns"])
-          .map(playerActionsFormat(playBetweenPlayer, game)),
-      });
-      await PLAYER_ACTIONS[answerBetweenAction.action](playBetweenPlayer, game);
+        const actionBetween = await prompt<{ action: PlayerAction }>({
+          type: "select",
+          name: "action",
+          message: "Choose an action:",
+          choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
+            .filter(playerActionFilters["betweenTurns"])
+            .map(playerActionsFormat(playerBetween, game)),
+        });
+        await PLAYER_ACTIONS[actionBetween.action](playerBetween, game);
+      }
     }
 
     round += 1;
