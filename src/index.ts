@@ -162,4 +162,12 @@ async function run() {
   console.log(chalk.bgGreen.white("END"));
 }
 
-void run();
+(async () => {
+  try {
+    await run();
+  } catch (error) {
+    console.debug(error);
+    console.log(chalk.whiteBright.bgRed("Goodbye!"));
+    process.exit();
+  }
+})();
