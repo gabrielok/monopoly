@@ -172,10 +172,7 @@ async function run() {
 
   const game = await initGame();
   function bankrupt() {
-    return game.players.reduce<number>(
-      (count, player) => count + (player.bankrupt ? 1 : 0),
-      0,
-    );
+    return game.players.filter((p) => p.bankrupt).length;
   }
 
   let round = 0;

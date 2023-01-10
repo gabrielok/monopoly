@@ -8,6 +8,22 @@ import type Game from "./game";
 import type Player from "./player";
 
 /**
+ * Returns a function, which adds the value to the player's balance.
+ *
+ * If the value is negative and the player's balance goes below 0, the player
+ * goes bankrupt.
+ */
+export function alterBalance(value: number) {
+  return (player: Player) => {
+    player.balance += value;
+    if (player.balance <= 0) {
+      console.log(`Oops! ${player.name} went bankrupt`);
+      player.bankrupt = true;
+    }
+  };
+}
+
+/**
  * Moves a player to jail without collecting from Go.
  */
 export function arrestPlayer(player: Player, game: Game) {
@@ -61,7 +77,7 @@ export function movePlayer(
   const [quotient, remainder] = divmod(player.position + steps, game.board.length);
   // quotient > 0 means the player walked over the starting point (Go)
   if (quotient > 0 && collect) {
-    player.balance += Number(process.env.COLLECT_FROM_GO);
+    alterBalance(Number(process.env.COLLECT_FROM_GO))(player);
   }
   player.position = remainder;
 }
@@ -90,9 +106,9 @@ export function processPlace(player: Player, game: Game) {
   } else if (place === "Chance" || place === "Chest") {
     game.applyCard(player, place);
   } else if (place === "Income Tax") {
-    player.balance -= Number(process.env.INCOME_TAX);
+    alterBalance(Number(process.env.INCOME_TAX))(player);
   } else if (place === "Super Tax") {
-    player.balance -= Number(process.env.SUPER_TAX);
+    alterBalance(Number(process.env.SUPER_TAX))(player);
   }
 }
 

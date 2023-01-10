@@ -1,6 +1,6 @@
 import { groupBy } from "@umatch/utils/array";
 
-import { arrestPlayer, movePlayer, transferMoney } from "./actions";
+import { alterBalance, arrestPlayer, movePlayer, transferMoney } from "./actions";
 
 import type Game from "./game";
 import type { Property } from "./interfaces/property";
@@ -48,15 +48,6 @@ function advanceToNearest(type: Property["type"]) {
 }
 
 /**
- * Returns a function, which adds the value to the player's balance.
- */
-function alterBalance(value: number) {
-  return (player: Player) => {
-    player.balance += value;
-  };
-}
-
-/**
  * Returns a function, which, for each player in the game, transfers money
  * from the calling player to the other player.
  */
@@ -77,8 +68,8 @@ function collectTaxes(houseTax: number, hotelTax: number) {
 
     const sites = groupBy(playerProperties, "type")["site"];
     sites.forEach((site) => {
-      player.balance -= (site as Site).houses * houseTax;
-      player.balance -= (site as Site).hotels * hotelTax;
+      alterBalance((site as Site).houses * houseTax)(player);
+      alterBalance((site as Site).hotels * hotelTax)(player);
     });
   };
 }
