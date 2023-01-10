@@ -19,6 +19,7 @@ export default class Game {
     const card = cardStack.pop();
     if (!card) throw new Error("Insufficient cards");
     cardStack.unshift(card);
+    console.log(`${player.name} picked: ${card.description}`);
     card.action(player, this);
   }
 
