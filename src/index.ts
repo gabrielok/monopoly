@@ -102,7 +102,7 @@ async function promptAndPerformAction(
   await PLAYER_ACTIONS[answer.action](player, game);
 }
 
-async function promptBoolean(message: string, inverted: boolean): Promise<boolean> {
+async function promptBoolean(message: string, inverted?: boolean): Promise<boolean> {
   const choices = ["Yes", "No"];
   if (inverted) choices.reverse();
 
