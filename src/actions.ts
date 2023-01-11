@@ -169,6 +169,7 @@ export async function rollDiceAction(player: Player, game: Game): Promise<void> 
     if (consecutiveDoubles === 3) {
       console.log(chalk.red(`Oh oh! ${player.name} moved too many times.`));
       arrestPlayer(player, game);
+      break;
     }
 
     const rolledDouble = await rollDiceAndMove(player, game);
