@@ -1,43 +1,15 @@
 import { shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
-import { parseBool } from "@umatch/utils/string";
 import chalk from "chalk";
-import { prompt } from "enquirer";
 
-import { managePropertiesAction, rollDiceAction } from "./actions";
 import { BOARD } from "./board";
 import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
+import { promptAndPerformAction } from "./prompts/promptAndPerformAction";
+import { promptBoolean } from "./prompts/promptBoolean";
+import { promptPlayerName } from "./prompts/promptPlayerName";
 import { PROPERTIES } from "./properties";
-
-// for some reason, enquirer doesn't export this interface
-type Choice = {
-  disabled?: boolean | string;
-  hint?: string;
-  message?: string;
-  name: string;
-  value?: string;
-};
-
-const PLAYER_ACTIONS = {
-  "Roll Dice": rollDiceAction,
-  "Manage Properties": managePropertiesAction,
-  "End Turn": () => {},
-} as const;
-type PlayerAction = keyof typeof PLAYER_ACTIONS;
-
-const playerActionFilters = {
-  startTurn: (action: PlayerAction) => {
-    return action !== "End Turn";
-  },
-  endTurn: (action: PlayerAction) => {
-    return action !== "Roll Dice";
-  },
-  between: (action: PlayerAction) => {
-    return action !== "Roll Dice" && action !== "Manage Properties";
-  },
-} as const;
 
 function greet() {
   console.log(
@@ -52,16 +24,6 @@ function greet() {
                                                                          `),
     "\n",
   );
-}
-
-function playerActionsFormat(
-  player: Player,
-  game: Game,
-): (action: PlayerAction) => Choice {
-  return (action: PlayerAction) => ({
-    disabled: action === "Manage Properties" && !game.getPlayerProperties(player),
-    name: action,
-  });
 }
 
 async function performActionsBetweenTurns(player: Player, game: Game, round: number) {
@@ -81,57 +43,9 @@ async function performActionsBetweenTurns(player: Player, game: Game, round: num
       );
       if (!wantsToPlay) continue;
 
-      await promptAndPerformAction(playerBetween, game, "between", playerActionsFormat);
+      await promptAndPerformAction(playerBetween, game, "between");
     }
   }
-}
-async function promptAndPerformAction(
-  player: Player,
-  game: Game,
-  filterKey: keyof typeof playerActionFilters,
-  mapper: (player: Player, game: Game) => (action: PlayerAction) => Choice,
-) {
-  const answer = await prompt<{ action: PlayerAction }>({
-    type: "select",
-    name: "action",
-    message: "Choose an action:",
-    choices: (Object.keys(PLAYER_ACTIONS) as PlayerAction[])
-      .filter(playerActionFilters[filterKey])
-      .map(mapper(player, game)),
-  });
-  await PLAYER_ACTIONS[answer.action](player, game);
-}
-
-async function promptBoolean(message: string, inverted?: boolean): Promise<boolean> {
-  const choices = ["Yes", "No"];
-  if (inverted) choices.reverse();
-
-  const answer = await prompt<{ choice: string }>({
-    type: "select",
-    name: "choice",
-    message,
-    choices,
-  });
-  return parseBool(answer.choice);
-}
-
-async function promptPlayerName(
-  players: Player[],
-  numberOfPlayers: number,
-): Promise<string> {
-  const answer = await prompt<{ name: string }>({
-    type: "input",
-    name: "name",
-    message: `What is your name? (${players.length + 1}/${numberOfPlayers})`,
-    validate(value: string): boolean | string {
-      if (!value) return "You need to type something";
-      if (value.length < 3) return "Please type a longer name";
-      if (players.map((p) => p.name.toLowerCase()).includes(value.toLowerCase()))
-        return "Name already taken";
-      return true;
-    },
-  });
-  return answer.name;
 }
 
 function getOptions(): {
@@ -180,8 +94,8 @@ async function run() {
     const player = nthElement(game.players, round);
     console.log(chalk.black.bgWhite(`Round ${round + 1} - ${player.name}'s turn`));
 
-    await promptAndPerformAction(player, game, "startTurn", playerActionsFormat);
-    await promptAndPerformAction(player, game, "endTurn", playerActionsFormat);
+    await promptAndPerformAction(player, game, "startTurn");
+    await promptAndPerformAction(player, game, "endTurn");
     await performActionsBetweenTurns(player, game, round);
 
     round += 1;
