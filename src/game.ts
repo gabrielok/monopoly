@@ -1,4 +1,5 @@
 import { groupBy } from "@umatch/utils/array";
+import chalk from "chalk";
 
 import type { Place } from "./board";
 import type { Card } from "./cards";
@@ -19,7 +20,7 @@ export default class Game {
     const card = cardStack.pop();
     if (!card) throw new Error("Insufficient cards");
     cardStack.unshift(card);
-    console.log(`${player.name} picked: ${card.description}`);
+    console.log(`${player.name} picked: ` + chalk.bgHex("#fa8e48")(card.description));
     card.action(player, this);
   }
 

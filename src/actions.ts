@@ -17,7 +17,7 @@ export function alterBalance(value: number) {
   return (player: Player) => {
     player.balance += value;
     if (player.balance <= 0) {
-      console.log(`Oops! ${player.name} went bankrupt`);
+      console.log(`Oh no! ${player.name} went bankrupt`);
       player.bankrupt = true;
     }
   };
@@ -101,6 +101,7 @@ function printSameLine(message?: any, cursorTo = 0) {
  */
 export function processPlace(player: Player, game: Game) {
   const place = game.board[player.position];
+  console.log(`${player.name} arrived on ${place}`);
   if (place === "Go To Jail") {
     arrestPlayer(player, game);
   } else if (place === "Chance" || place === "Chest") {
