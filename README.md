@@ -8,17 +8,21 @@ For example, how often players land on a property is vital for determining its v
 - ~~Multiple players~~
 - ~~Play again when you roll a double dice~~
 - ~~Go to jail if you roll 3 doubles in one turn~~
-- Collect rent from other players
-  - Sites
-  - Transports
-  - Utilities
-- Buy properties from bank
+- ~~Collect rent from other players~~
+  - ~~Sites~~
+  - ~~Transports~~
+  - ~~Utilities~~
+- ~~Buy properties from bank~~
 - Auctions
 - Negotiate properties with other players
-- Pay/collect from other players (chance cards)
+- ~~Pay/collect from other players (chance cards)~~
 - True multiplayer
 - Front-end
-- Limit the number of available houses
+- Limit the number of available houses & hotels
 - Finish implementations
   - getOptions()
   - manageProperties()
+  - transferMoney() => player can go bankrupt to another player
+- Show card info (color, rent, price, etc.)
+- Limit player actions when arrested
+- Remove bankrupt players
