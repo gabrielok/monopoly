@@ -110,6 +110,8 @@ export function processPlace(player: Player, game: Game) {
     alterBalance(Number(process.env.INCOME_TAX))(player);
   } else if (place === "Super Tax") {
     alterBalance(Number(process.env.SUPER_TAX))(player);
+  } else if (place === "Go" || place === "Jail" || place === "Parking") {
+    // nothing happens
   }
 }
 
