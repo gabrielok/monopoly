@@ -11,6 +11,11 @@ import Player from "../src/player";
 import { PROPERTIES } from "../src/properties";
 
 const MAX_ITER = 100_000;
+process.env.NODE_ENV = "dev";
+
+// disable logging in other files to make it faster
+const log = console.log;
+console.log = () => {};
 
 async function simulate() {
   const visited = {} as { [_ in Place]: number };
@@ -28,7 +33,7 @@ async function simulate() {
     shuffle(chestCards),
   );
   let lastPos;
-  console.log(chalk.green(`Collecting data from ${MAX_ITER} iterations...`));
+  log(chalk.green(`Collecting data from ${MAX_ITER} iterations...`));
   for (let i = 0; i < MAX_ITER; i += 1) {
     const steps = randomInteger(1, 6) + randomInteger(1, 6);
     movePlayer(player, game, steps, true);
@@ -44,7 +49,7 @@ async function simulate() {
   }
 
   const formatted = apply(visited, (count) => round((count / MAX_ITER) * 100, 2));
-  console.log(stringify(formatted, { pad: true }));
+  log(stringify(formatted, { pad: true }));
 }
 
 (async () => {
@@ -53,6 +58,6 @@ async function simulate() {
   } catch (error) {
     console.debug(error);
   }
-  console.log(chalk.whiteBright.bgRed("End simulation"));
+  log(chalk.whiteBright.bgRed("End simulation"));
   process.exit();
 })();
