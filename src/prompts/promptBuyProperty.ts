@@ -62,6 +62,7 @@ async function handleAuction(game: Game, property: Property) {
       },
       ...bidJumpOptions.map((increase) => ({
         name: String(currentBid + increase),
+        disabled: currentBid + increase > player.balance,
         hint: `(+${increase})`,
       })),
     ]);
