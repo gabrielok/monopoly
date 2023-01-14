@@ -39,11 +39,11 @@ async function simulate() {
     movePlayer(player, game, steps, true);
     lastPos = player.position;
     registerVisit(player, game);
-    processPlace(player, game);
+    await processPlace(player, game, steps);
     // the player may move multiple times per turn due to chance cards
     while (lastPos !== player.position) {
       registerVisit(player, game);
-      processPlace(player, game);
+      await processPlace(player, game, steps);
       lastPos = player.position;
     }
   }

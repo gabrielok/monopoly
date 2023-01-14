@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { prompt } from "enquirer";
 import { setTimeout } from "node:timers/promises";
 
+import { isSite } from "./interfaces/site";
 import { promptBuyProperty } from "./prompts/promptBuyProperty";
 
 import type { Place } from "./board";
@@ -32,6 +33,37 @@ export function alterBalance(value: number) {
 export function arrestPlayer(player: Player, game: Game) {
   console.log(chalk.white.bgRedBright(`👮🏻 ${player.name} has been arrested`));
   movePlayer(player, game, "Jail", false);
+}
+
+/**
+ * Returns how much rent a player must pay the owner upon landing on a property.
+ */
+function calcRent(
+  owner: Player,
+  game: Game,
+  property: Property,
+  diceRoll: number,
+): number {
+  if (isSite(property)) {
+    if (property.hotels === 1) {
+      return property.rent.at(-1)!;
+    } else if (property.houses > 0) {
+      return property.rent[property.houses];
+    } else {
+      const baseRent = property.rent[0];
+      return baseRent * (game.doesOwnerOwnSet(owner, property) ? 2 : 1);
+    }
+  } else {
+    const countProperties = game
+      .getPropertiesOfType(property.type)
+      .filter((p) => p.owner === owner.name).length;
+    if (property.type === "transport") {
+      return Number(process.env.RENT_TRANSPORT) * countProperties;
+    } else {
+      const multiplier = countProperties === 1 ? 4 : 10;
+      return Number(process.env.RENT_UTILITY) * multiplier * diceRoll;
+    }
+  }
 }
 
 export async function managePropertiesAction(player: Player, game: Game) {
@@ -122,7 +154,9 @@ export async function processPlace(player: Player, game: Game, diceRoll: number)
     const property = game.getProperty(place);
     const owner = game.players.find((p) => p.name === property.owner);
     if (owner) {
-      // TODO: pay rent to owner
+      const rent = calcRent(owner, game, property, diceRoll);
+      console.log(`${player.name} owes ${owner.name} $${rent} for visiting ${place}`);
+      transferMoney(player, owner, rent);
     } else {
       await promptBuyProperty(player, game, property);
     }
@@ -167,9 +201,9 @@ async function rollDiceAndMove(player: Player, game: Game): Promise<boolean> {
 
   // Some cards move the player. If they moved, then we should process the new place.
   const lastPos = player.position;
-  processPlace(player, game);
+  await processPlace(player, game, totalRoll);
   if (player.position !== lastPos) {
-    processPlace(player, game);
+    await processPlace(player, game, totalRoll);
   }
   return firstRoll === secondRoll;
 }

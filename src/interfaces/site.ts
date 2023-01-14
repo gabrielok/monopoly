@@ -9,3 +9,7 @@ export type Site = Property & {
   rent: [number, number, number, number, number, number];
   type: "site";
 };
+
+export function isSite(property: Property): property is Site {
+  return property.type === "site";
+}

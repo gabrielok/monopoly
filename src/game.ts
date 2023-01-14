@@ -1,6 +1,8 @@
 import { groupBy } from "@umatch/utils/array";
 import chalk from "chalk";
 
+import { isSite, Site } from "./interfaces/site";
+
 import type { Place } from "./board";
 import type { Card } from "./cards";
 import type { Property } from "./interfaces/property";
@@ -22,6 +24,12 @@ export default class Game {
     cardStack.unshift(card);
     console.log(`${player.name} picked: ` + chalk.bgHex("#fa8e48")(card.description));
     card.action(player, this);
+  }
+
+  public doesOwnerOwnSet(owner: Player, site: Site): boolean {
+    const sites = this.properties.filter(isSite);
+    const colorSet = groupBy(sites, "color")[site.color];
+    return colorSet.every((p) => p.owner === owner.name);
   }
 
   public getPlayerProperties(player: Player): Property[] | undefined {
