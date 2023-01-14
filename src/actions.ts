@@ -31,7 +31,7 @@ export function alterBalance(value: number) {
  * Moves a player to jail without collecting from Go.
  */
 export function arrestPlayer(player: Player, game: Game) {
-  console.log(chalk.white.bgRedBright(`👮🏻 ${player.name} has been arrested`));
+  console.log(chalk.white.bgRedBright(`${player.name} has been arrested 🚓`));
   movePlayer(player, game, "Jail", false);
 }
 
