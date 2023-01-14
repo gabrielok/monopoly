@@ -1,5 +1,6 @@
 import { shuffle } from "@umatch/utils/array";
 import { nthElement } from "@umatch/utils/math";
+import { snakeCase } from "@umatch/utils/string";
 import chalk from "chalk";
 
 import { BOARD } from "./board";
@@ -66,15 +67,13 @@ function getOptions(): {
 
 export async function initGame(): Promise<Game> {
   const options = getOptions();
-  const { alwaysAuction, collectFromGo, incomeTax, maxPlayers, superTax } = options;
-  process.env.ALWAYS_AUCTION = String(alwaysAuction);
-  process.env.COLLECT_FROM_GO = String(collectFromGo);
-  process.env.INCOME_TAX = String(incomeTax);
-  process.env.SUPER_TAX = String(superTax);
+  for (const [name, value] of Object.entries(options)) {
+    process.env[snakeCase(name).toUpperCase()] = String(value);
+  }
 
   const players: Player[] = [];
-  for (let i = 0; i < maxPlayers; i += 1) {
-    const name = await promptPlayerName(players, maxPlayers);
+  for (let i = 0; i < options.maxPlayers; i += 1) {
+    const name = await promptPlayerName(players, options.maxPlayers);
     players.push(new Player(name));
   }
 
