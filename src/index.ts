@@ -54,6 +54,8 @@ function getOptions(): {
   collectFromGo: number;
   incomeTax: number;
   maxPlayers: number;
+  rentTransport: number;
+  rentUtility: number;
   superTax: number;
 } {
   return {
@@ -61,6 +63,8 @@ function getOptions(): {
     collectFromGo: 2000,
     incomeTax: 2000,
     maxPlayers: 4,
+    rentTransport: 500,
+    rentUtility: 10,
     superTax: 1000,
   };
 }

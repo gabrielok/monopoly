@@ -31,4 +31,10 @@ export default class Game {
   public getPropertiesOfType(type: Property["type"]): Property[] {
     return groupBy(this.properties, "type")[type];
   }
+
+  public getProperty(name: Place): Property {
+    const property = this.properties.find((p) => p.name === name);
+    if (!property) throw new Error(`Unrecognized property name: ${name}`);
+    return property;
+  }
 }

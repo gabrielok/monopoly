@@ -3,8 +3,11 @@ import chalk from "chalk";
 import { prompt } from "enquirer";
 import { setTimeout } from "node:timers/promises";
 
+import { promptBuyProperty } from "./prompts/promptBuyProperty";
+
 import type { Place } from "./board";
 import type Game from "./game";
+import type { Property } from "./interfaces/property";
 import type Player from "./player";
 
 /**
@@ -99,7 +102,7 @@ function printSameLine(message?: any, cursorTo = 0) {
  * If the place is a property, the player must
  * pay rent to the owner or may buy it if it is unowned.
  */
-export function processPlace(player: Player, game: Game) {
+export async function processPlace(player: Player, game: Game, diceRoll: number) {
   const place = game.board[player.position];
   console.log(`${player.name} arrived on ${place}`);
   if (place === "Go To Jail") {
@@ -112,6 +115,17 @@ export function processPlace(player: Player, game: Game) {
     alterBalance(Number(process.env.SUPER_TAX))(player);
   } else if (place === "Go" || place === "Jail" || place === "Parking") {
     // nothing happens
+  } else {
+    if (process.env.NODE_ENV === "dev") return;
+
+    // place is a property
+    const property = game.getProperty(place);
+    const owner = game.players.find((p) => p.name === property.owner);
+    if (owner) {
+      // TODO: pay rent to owner
+    } else {
+      await promptBuyProperty(player, game, property);
+    }
   }
 }
 
