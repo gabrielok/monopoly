@@ -3,16 +3,8 @@ import { prompt } from "enquirer";
 import { managePropertiesAction, rollDiceAction } from "../actions";
 
 import type Game from "../game";
+import type { Choice } from "../interfaces/choice";
 import type Player from "../player";
-
-// for some reason, enquirer doesn't export this interface
-type Choice = {
-  disabled?: boolean | string;
-  hint?: string;
-  message?: string;
-  name: string;
-  value?: string;
-};
 
 const PLAYER_ACTIONS = {
   "Roll Dice": rollDiceAction,
