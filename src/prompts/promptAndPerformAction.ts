@@ -35,7 +35,7 @@ function playerActionsFormat(
   });
 }
 
-export async function promptAndPerformAction(
+export default async function promptAndPerformAction(
   player: Player,
   game: Game,
   filterKey: keyof typeof playerActionFilters,

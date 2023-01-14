@@ -2,7 +2,7 @@ import { prompt } from "enquirer";
 
 import type Player from "../player";
 
-export async function promptPlayerName(
+export default async function promptPlayerName(
   players: Player[],
   numberOfPlayers: number,
 ): Promise<string> {

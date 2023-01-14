@@ -7,9 +7,9 @@ import { BOARD } from "./board";
 import { chanceCards, chestCards } from "./cards";
 import Game from "./game";
 import Player from "./player";
-import { promptAndPerformAction } from "./prompts/promptAndPerformAction";
-import { promptBoolean } from "./prompts/promptBoolean";
-import { promptPlayerName } from "./prompts/promptPlayerName";
+import promptAndPerformAction from "./prompts/promptAndPerformAction";
+import promptBoolean from "./prompts/promptBoolean";
+import promptPlayerName from "./prompts/promptPlayerName";
 import { PROPERTIES } from "./properties";
 
 function greet() {
