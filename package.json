@@ -1,6 +1,6 @@
 {
     "name": "monopoly",
-    "version": "0.6.0",
+    "version": "0.6.1",
     "description": "A monopoly simulation",
     "main": "./build/index.js",
     "scripts": {
