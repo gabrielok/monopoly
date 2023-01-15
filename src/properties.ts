@@ -1,8 +1,11 @@
+import { basicPluralizer, formatStr, pad } from "@umatch/utils/string";
+
+import { isSite } from "./interfaces/site";
+
 import type { Property } from "./interfaces/property";
 import type { Site } from "./interfaces/site";
 
 type PropertyInitializer = ["transport" | "utility", Property["name"], Property["price"]];
-
 type SiteInitializer = [
   "site",
   Site["name"],
@@ -77,3 +80,122 @@ export const PROPERTIES: (Property | Site)[] = _properties.map(
     }
   },
 );
+
+export function formatMoney(value: number): string {
+  return value >= 1000 ? value / 1000 + "M" : value + "K";
+}
+
+const whiteLineFn =
+  (length: number) =>
+  (...params: Parameters<typeof formatStr>) =>
+    formatStr(params[0], { color: "black", bgColor: "white", length, ...params[1] });
+const redLineFn =
+  (length: number) =>
+  (...params: Parameters<typeof formatStr>) =>
+    formatStr(params[0], {
+      color: "white",
+      bgColor: "red",
+      length: length - 4,
+      ...params[1],
+    });
+
+export function displayProperty(property: Property) {
+  if (isSite(property)) {
+    displaySite(property);
+    return;
+  } else if (property.type === "transport") {
+    displayTransport(property);
+  } else {
+    displayUtility(property);
+  }
+}
+
+const PRINT_WIDTH = 32;
+
+function displayTransport(property: Property) {
+  const innerWidth = PRINT_WIDTH - 2;
+  const whiteLine = whiteLineFn(PRINT_WIDTH);
+  const baseRent = Number(process.env.RENT_TRANSPORT);
+  const rents = [0, 1, 2, 3].map((i) => formatMoney(baseRent * 2 ** i));
+  const lines = [
+    // TODO: add some icon
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(property.name, { bold: true }),
+    whiteLine(),
+    whiteLine(pad("RENT", rents[0], innerWidth)),
+    ...[2, 3, 4].map((number) =>
+      [
+        whiteLine(pad("If " + basicPluralizer("transport", number), "", innerWidth)),
+        whiteLine(pad("are owned", rents[number - 1], innerWidth)),
+      ].join("\n"),
+    ),
+    whiteLine(),
+    whiteLine(`MORTGAGE VALUE - ${formatMoney(property.price)}`),
+    whiteLine(),
+  ];
+  console.log(lines.join("\n"));
+}
+
+function displayUtility(property: Property) {
+  const whiteLine = whiteLineFn(PRINT_WIDTH);
+  const baseRent = Number(process.env.RENT_UTILITY);
+  const lines = [
+    // TODO: add some icon
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(),
+    whiteLine(property.name, { bold: true }),
+    whiteLine(),
+    whiteLine('If 1 "Utility" is owned,'),
+    whiteLine("rent is 4 times amount"),
+    whiteLine("shown on dice.*"),
+    whiteLine(),
+    whiteLine('If both "Utilities" are owned,'),
+    whiteLine("rent is 10 times amount"),
+    whiteLine("shown on dice.*"),
+    whiteLine(),
+    whiteLine(`MORTGAGE VALUE - ${formatMoney(property.price)}`),
+    whiteLine(),
+    whiteLine(`* Multiplied by ${formatMoney(baseRent)}`),
+    whiteLine(),
+  ];
+  console.log(lines.join("\n"));
+}
+
+function displaySite(site: Site) {
+  const innerWidth = PRINT_WIDTH - 6;
+  const whiteLine = whiteLineFn(PRINT_WIDTH);
+  const redLine = redLineFn(PRINT_WIDTH);
+
+  const rents = site.rent.map(formatMoney);
+  const [baseRent] = rents;
+  const rentsWithHouses = rents.slice(1, -1);
+  const rentWithHotel = rents.at(-1)!;
+  const lines = [
+    whiteLine(),
+    whiteLine(redLine()),
+    whiteLine(redLine(site.name), { bold: true }),
+    whiteLine(redLine()),
+    whiteLine(),
+    whiteLine(`Rent: ${baseRent}`),
+    whiteLine(),
+    ...rentsWithHouses.map((rent, i) =>
+      whiteLine(pad(`With ${basicPluralizer("House", i + 1)} `, rent, innerWidth)),
+    ),
+    whiteLine(pad(`With Hotel`, rentWithHotel, innerWidth)),
+    whiteLine(),
+    whiteLine(`Mortgage Value ${formatMoney(site.price)}`),
+    whiteLine(),
+    whiteLine(`Houses cost ${formatMoney(site.houseCost)} each`),
+    whiteLine(`Hotels, ${formatMoney(site.hotelCost)} each`),
+    whiteLine("plus 4 houses"),
+    whiteLine(),
+  ];
+  console.log(lines.join("\n"));
+}
