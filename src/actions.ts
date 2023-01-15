@@ -58,7 +58,7 @@ function calcRent(
       .getPropertiesOfType(property.type)
       .filter((p) => p.owner === owner.name).length;
     if (property.type === "transport") {
-      return Number(process.env.RENT_TRANSPORT) * countProperties;
+      return Number(process.env.RENT_TRANSPORT) * 2 ** countProperties;
     } else {
       const multiplier = countProperties === 1 ? 4 : 10;
       return Number(process.env.RENT_UTILITY) * multiplier * diceRoll;
